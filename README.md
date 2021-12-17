@@ -9,4 +9,5 @@ FindTune Reworked is a, well, rework of the music suggestion program FindTune, n
 You need the following Python packages:
 PyQt5, Pillow, Re, Pafy, discogs_client, urllib.request and youtube-dl
 
-# You also need an account on Discogs and supply a user access token to be able to run(line 13 in mainwindow.py).
+# You also need an account on Discogs and supply a user access token to be able to run.
+Token to be suppplied at line 13 in mainwindow.py
