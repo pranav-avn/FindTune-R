@@ -2,23 +2,16 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QPlainTextEdit, QPushButt
 from PyQt5 import uic
 from PyQt5.QtGui import QPixmap
 import sys
-import discogs_client
-import urllib.request
-import re
-import pafy
-from urllib.request import urlretrieve
-import random
 from PIL import Image, ImageEnhance
-
-d = discogs_client.Client('FindTune/1.0', user_token=<your user token goes here>)
-
-trackname = list()
+import logic.inputanalysis
 
 class SongRecommendWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
         uic.loadUi("recompage.ui", self) #recomendations window time
+        
+        trackname = logic.inputanalysis.tracknamee
 
         self.img1 = self.findChild(QLabel, "img1")
         self.txt1 = self.findChild(QLabel, "text_1")
@@ -32,7 +25,6 @@ class SongRecommendWindow(QMainWindow):
         self.txt5 = self.findChild(QLabel, "text_5")
         self.img6 = self.findChild(QLabel, "img1_6")
         self.txt6 = self.findChild(QLabel, "text_6")
-
 
         im = Image.open('rec1.jpg')
         enhancer = ImageEnhance.Brightness(im)
@@ -93,9 +85,7 @@ class SongRecommendWindow(QMainWindow):
         self.img6.setPixmap(pixmap)
         self.img6.setScaledContents(True)
         self.txt6.setText(trackname[5])
-
         self.show()
-
 
 
 class SongInputWindow(QMainWindow):
@@ -107,103 +97,15 @@ class SongInputWindow(QMainWindow):
         self.textbox = self.findChild(QPlainTextEdit, "textbox")
         self.submitbutton = self.findChild(QPushButton, "submit")
         self.taxt = self.findChild(QLabel, "label")
-
         self.submitbutton.clicked.connect(self.clicker2)
-        
         self.show()
         
     def clicker2(self, clicked):
-        #saving_input(self)
-        mytext = self.textbox.toPlainText()
-        with open('input.txt', 'w') as f: #saving user input
-            f.write(mytext)
-            print("input accepted") #debug
-
-        with open('input.txt', 'r') as f:
-            slist = f.readlines()
-        
-        inp = []
-        for i in slist:
-            s = i.split('-', 1)
-            inp.append(s)
-        print(inp) #debug
-
-        songlist = []
-        artistlist = []
-        genrelist1 = []
-        genrelist2 = []
-        for i in inp:
-            song = i[0]
-            a = i[1]
-            inpresults = d.search(song, artist=a, type='release')
-            artid = inpresults[0].id
-            res2 = d.release(artid)
-            print(res2.genres) #debug
-            g1 = res2.genres[0]
-            if len(res2.genres)>1: g2 = res2.genres[1] 
-            else: g2="empty"
-            if g2!="empty": print(song, a, g1, g2) 
-            else: print(song,a,g1)
-
-            songlist.append(song)
-            artistlist.append(a)
-            genrelist1.append(g1)
-            genrelist2.append(g2)
-
-        def youtubesearch(idn, namee):
-            print(idn)
-            release = d.release(idn)
-            leng = len(release.tracklist)
-            print(leng)
-            i = random.randint(0,leng)
-            print(i)
-            stitle = release.tracklist[i].title
-            artist = release.artists[0].name
-            title = stitle+' by '+artist
-            global trackname
-            trackname.append(title)
-            print(title)
-            query = title.replace(" ", "+")
-            print(query)
-            html = urllib.request.urlopen("https://www.youtube.com/results?search_query=" + query)
-            video_id = re.findall(r"watch\?v=(\S{11})", html.read().decode())
-            video_url = "https://www.youtube.com/watch?v=" + video_id[0]
-            print(video_url)
-            video = pafy.new(video_url, basic=True, gdata=False)
-            thumb = video.bigthumb
-            filename = namee+'.jpg'
-            print(filename)
-            urlretrieve(thumb, filename)
-        
-        for artist in artistlist:
-            artsrch = d.search(artist=artist, type='release')
-            artrecom1 = artsrch[0].id
-            artrecom2 = artsrch[1].id
-            print(artrecom1)
-            print(artrecom2)
-            youtubesearch(artrecom1, "rec1")
-            youtubesearch(artrecom2, "rec2")
-
-        for genre in genrelist1:
-            gensrch = d.search(genre=genre, type='release')
-            genrecom1 = gensrch[0].id
-            genrecom2 = gensrch[1].id
-            genrecom3 = gensrch[2].id
-            genrecom4 = gensrch[3].id
-            print(genrecom1)
-            print(genrecom2)
-            print(genrecom3)
-            print(genrecom4)
-            youtubesearch(genrecom1, "rec3")
-            youtubesearch(genrecom2, "rec4")
-            youtubesearch(genrecom3, "rec5")
-            youtubesearch(genrecom4, "rec6")
-        
+        logic.inputanalysis.saving_input(self)
         SongInputWindow.hide(self) #moving to 3rd window
         self.w = SongRecommendWindow()
         self.w.show()
         
-
 
 class MainWindow(QMainWindow):
 
@@ -227,8 +129,12 @@ class MainWindow(QMainWindow):
         self.w = SongInputWindow()
         self.w.show()
 
-#initialize the app
-app = QApplication(sys.argv)
-w = MainWindow()
-w.show()
-app.exec_()
+def mainApp():
+    app = QApplication(sys.argv) #initialize the app
+    w = MainWindow()
+    w.setWindowTitle("FindTune")
+    w.show()
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    mainApp()
