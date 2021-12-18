@@ -53,6 +53,7 @@ def saving_input(self):
         slist = f.readlines()
             
     inp = []
+    
     for i in slist:
         s = i.split('-', 1)
         inp.append(s)
